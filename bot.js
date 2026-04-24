@@ -11,7 +11,7 @@ const { handleProxyIP } = require("./handlers/9proxy_ip");
 const { handleIPProxy } = require("./handlers/ip_proxy");
 const { handleProxyGB } = require("./handlers/9proxy_gb");
 const { handleSwiftProxy } = require("./handlers/swift_proxy");
-
+const { handleNiceProxy } = require("./handlers/nice_proxy");
 
 const {
   handlePaymentMethod,
@@ -42,6 +42,7 @@ bot.on("callback_query", async (query) => {
   if (await handleProxyIP(bot, query)) return;
   if (await handleProxyGB(bot, query)) return;
   if (await handleSwiftProxy(bot, query)) return;
+  if (await handleNiceProxy(bot, query)) return;
   if (await handlePaymentMethod(bot, query)) return;
   if (await handlePaymentDone(bot, query)) return;
   if (await handleVpn(bot, query)) return;
