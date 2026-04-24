@@ -7,7 +7,7 @@ async function handleIPProxy(bot, query) {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: "⚡ DataImpulse", callback_data: "dataimpulse" },
+            { text: "⚡ DataImpulse", callback_data: "dataimpulse_menu" },
             { text: "🌍 9proxy IP", callback_data: "order_9proxy_ip" }
           ],
           [
