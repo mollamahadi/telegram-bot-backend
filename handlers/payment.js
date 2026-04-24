@@ -127,7 +127,11 @@ async function handlePaymentDone(bot, query) {
 
   const product = payment.product;
 
-  const customerName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+  const customerName =
+    user.first_name
+      ? `${user.first_name} ${user.last_name || ""}`.trim()
+      : "Unknown";
+
   const username = user.username ? `@${user.username}` : "No username";
 
   bot.sendMessage(
@@ -140,13 +144,15 @@ async function handlePaymentDone(bot, query) {
       `Admin will verify your payment soon.`,
     {
       reply_markup: {
-        inline_keyboard: [[{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]]
+        inline_keyboard: [
+          [{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]
+        ]
       }
     }
   );
 
   const adminCaption =
-    `🛒 New Order Received!\n` +
+    `🛒 New Order Received!\n\n` +
     `📦 Product: ${product.name}\n` +
     `📦 Package: ${product.package}\n` +
     `💰 Payment Amount: ${product.price}\n` +
