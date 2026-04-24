@@ -315,9 +315,6 @@ bot.on("callback_query", async (query) => {
 
 
 
-
-bot.answerCallbackQuery(query.id).catch(() => {});
-
 console.log("Bot running...");
 
 const http = require("http");
