@@ -32,15 +32,15 @@ bot.on("photo", async (msg) => {
 
 /* ===================== BUTTON HANDLER ===================== */
 bot.on("callback_query", async (query) => {
- await handleSupport(bot, query);
+await handleSupport(bot, query);
 await handleIPProxy(bot, query);
 await handleDataImpulse(bot, query);
 await handleProxyIP(bot, query);
+await handleProxyGB(bot, query);   // 👈 এখানে আনো
 await handlePaymentMethod(bot, query);
 await handlePaymentDone(bot, query);
 await handleVpn(bot, query);
 await handleSubscription(bot, query);
-await handleProxyGB(bot, query);
   
 
   bot.answerCallbackQuery(query.id).catch(() => {});
