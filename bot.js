@@ -10,6 +10,7 @@ const { handleDataImpulse } = require("./handlers/dataimpulse");
 const { handleProxyIP } = require("./handlers/9proxy_ip");
 const { handleIPProxy } = require("./handlers/ip_proxy");
 const { handleProxyGB } = require("./handlers/9proxy_gb");
+const { handleSwiftProxy } = require("./handlers/swift_proxy");
 
 
 const {
@@ -32,11 +33,13 @@ bot.on("photo", async (msg) => {
 
 /* ===================== BUTTON HANDLER ===================== */
 bot.on("callback_query", async (query) => {
+ console.log("GLOBAL CLICK:", query.data);
 await handleSupport(bot, query);
 await handleIPProxy(bot, query);
 await handleDataImpulse(bot, query);
 await handleProxyIP(bot, query);
 await handleProxyGB(bot, query);   // 👈 এখানে আনো
+await handleSwiftProxy(bot, query);
 await handlePaymentMethod(bot, query);
 await handlePaymentDone(bot, query);
 await handleVpn(bot, query);
