@@ -31,6 +31,7 @@ bot.on("photo", async (msg) => {
 bot.on("callback_query", async (query) => {
   await handleSupport(bot, query);
   await handleDataImpulse(bot, query);
+  await handleProxyIP(bot, query);
   await handlePaymentMethod(bot, query);
   await handlePaymentDone(bot, query);
   await handleVpn(bot, query);
