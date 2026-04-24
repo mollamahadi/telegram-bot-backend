@@ -8,6 +8,8 @@ const { handleVpn } = require("./handlers/vpn");
 const { handleSubscription } = require("./handlers/subscription");
 const { handleDataImpulse } = require("./handlers/dataimpulse");
 const { handleProxyIP } = require("./handlers/9proxy_ip");
+const { handleIPProxy } = require("./handlers/ip_proxy");
+
 
 const {
   handlePaymentMethod,
@@ -36,6 +38,7 @@ bot.on("callback_query", async (query) => {
   await handlePaymentDone(bot, query);
   await handleVpn(bot, query);
   await handleSubscription(bot, query);
+  
 
   bot.answerCallbackQuery(query.id).catch(() => {});
 });
