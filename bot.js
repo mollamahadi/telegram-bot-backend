@@ -1,10 +1,15 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const fs = require("fs");
+const http = require("http");
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
 const BINANCE_QR_PATH = "./binance_qr.jpg";
+
+/* ===================== TEMP PAYMENT STORAGE ===================== */
+const pendingPayments = {};
 
 /* ===================== DATAIMPULSE PACKAGES ===================== */
 const dataImpulsePackages = {
@@ -26,41 +31,68 @@ const dataImpulsePackages = {
   di_100: { label: "100 GB", price: "Contact Support", available: true }
 };
 
-/* ===================== MAIN MENU FUNCTION ===================== */
+/* ===================== MAIN MENU ===================== */
 function showMainMenu(chatId) {
   bot.sendMessage(chatId, "🚀 Welcome to Global Verified Shop\nSelect an option:", {
     reply_markup: {
       inline_keyboard: [
-
-         [
+        [
+          { text: "📢 Report", callback_data: "report" },
+          { text: "📚 Learn", callback_data: "learn" }
+        ],
+        [
+          { text: "📣 Join Channel", callback_data: "join_channel" },
+          { text: "☎️ HotLine", callback_data: "hotline" }
+        ],
+        [
           { text: "🌐 IP/Proxy", callback_data: "ip_proxy" },
           { text: "🔐 BUY VPN", callback_data: "buy_vpn" }
         ],
         [
           { text: "⭐ Premium Subscription", callback_data: "premium_subscription" }
         ],
-
-         [
-          { text: "📣 Join Channel", callback_data: "join_channel" },
-          { text: "☎️ HotLine", callback_data: "hotline" }
-        ],
-       
-
         [
-          { text: "📢 Report", callback_data: "report" },
-          { text: "📚 Learn", callback_data: "learn" }
-        ],
-        
-       
-       
+          { text: "🛍 Open Shop", web_app: { url: process.env.SHOP_URL } }
+        ]
       ]
     }
   });
 }
 
-/* ===================== START COMMAND ===================== */
+/* ===================== START ===================== */
 bot.onText(/\/start/, (msg) => {
   showMainMenu(msg.chat.id);
+});
+
+/* ===================== SCREENSHOT UPLOAD HANDLER ===================== */
+bot.on("photo", async (msg) => {
+  const chatId = msg.chat.id;
+  const payment = pendingPayments[chatId];
+
+  if (!payment || !payment.waitingForScreenshot) {
+    return;
+  }
+
+  const photos = msg.photo;
+  const bestPhoto = photos[photos.length - 1];
+
+  pendingPayments[chatId].screenshotFileId = bestPhoto.file_id;
+  pendingPayments[chatId].waitingForScreenshot = false;
+
+  const pkg = dataImpulsePackages[payment.pkgKey];
+
+  bot.sendMessage(
+    chatId,
+    `✅ Screenshot received!\n\n📦 Product: DataimPulse ${pkg.label}\n💰 Amount: ${pkg.price}\n💳 Method: ${payment.method}\n\nNow click Payment Done.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "✅ Payment Done", callback_data: `payment_done_${payment.pkgKey}` }],
+          [{ text: "⬅️ Back", callback_data: payment.pkgKey }]
+        ]
+      }
+    }
+  );
 });
 
 /* ===================== BUTTON HANDLER ===================== */
@@ -69,34 +101,30 @@ bot.on("callback_query", async (query) => {
   const data = query.data;
   const user = query.from;
 
-  /* ===================== BACK BUTTON ===================== */
+  /* ===== BACK ===== */
   if (data === "back_main") {
     showMainMenu(chatId);
   }
 
-  /* ===================== REPORT ===================== */
+  /* ===== REPORT ===== */
   if (data === "report") {
     bot.sendMessage(chatId, "📢 Please contact support.", {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: "⬅️ Back", callback_data: "back_main" }]
-        ]
+        inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back_main" }]]
       }
     });
   }
 
-  /* ===================== LEARN ===================== */
+  /* ===== LEARN ===== */
   if (data === "learn") {
     bot.sendMessage(chatId, "📚 Learning section coming soon.", {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: "⬅️ Back", callback_data: "back_main" }]
-        ]
+        inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back_main" }]]
       }
     });
   }
 
-  /* ===================== CHANNEL SECTION ===================== */
+  /* ===== CHANNEL ===== */
   if (data === "join_channel") {
     bot.sendMessage(chatId, "📣 Join our Channels:", {
       reply_markup: {
@@ -109,7 +137,7 @@ bot.on("callback_query", async (query) => {
     });
   }
 
-  /* ===================== SUPPORT SECTION ===================== */
+  /* ===== SUPPORT ===== */
   if (data === "hotline") {
     bot.sendMessage(chatId, "☎️ Contact Support:", {
       reply_markup: {
@@ -138,7 +166,7 @@ bot.on("callback_query", async (query) => {
     });
   }
 
-  /* ===================== DATAIMPULSE PACKAGE MENU ===================== */
+  /* ===================== DATAIMPULSE MENU ===================== */
   if (data === "dataimpulse_menu") {
     const packageButtons = Object.entries(dataImpulsePackages).map(([key, item]) => [
       {
@@ -163,9 +191,7 @@ bot.on("callback_query", async (query) => {
     if (!pkg.available) {
       bot.sendMessage(chatId, `❌ DataimPulse ${pkg.label} Stock Out`, {
         reply_markup: {
-          inline_keyboard: [
-            [{ text: "⬅️ Back", callback_data: "dataimpulse_menu" }]
-          ]
+          inline_keyboard: [[{ text: "⬅️ Back", callback_data: "dataimpulse_menu" }]]
         }
       });
     } else {
@@ -190,27 +216,25 @@ bot.on("callback_query", async (query) => {
     const pkgKey = data.replace("pay_binance_", "");
     const pkg = dataImpulsePackages[pkgKey];
 
+    pendingPayments[chatId] = {
+      pkgKey,
+      method: "Binance",
+      waitingForScreenshot: true,
+      screenshotFileId: null
+    };
+
     const msg =
       `🟡 Binance Payment\n\n` +
       `📦 Product: DataimPulse ${pkg.label}\n` +
       `💰 Amount: ${pkg.price}\n\n` +
       `🆔 Binance ID: 420284061\n\n` +
-      `Payment complete হলে নিচের button চাপুন।`;
+      `Payment complete হলে এখানে payment screenshot upload করুন।`;
 
     if (fs.existsSync(BINANCE_QR_PATH)) {
       await bot.sendPhoto(chatId, BINANCE_QR_PATH, { caption: msg });
     } else {
       await bot.sendMessage(chatId, msg);
     }
-
-    bot.sendMessage(chatId, "Payment complete হলে নিচের button চাপুন:", {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "✅ Payment Done", callback_data: `done_binance_${pkgKey}` }],
-          [{ text: "⬅️ Back", callback_data: pkgKey }]
-        ]
-      }
-    });
   }
 
   /* ===================== NAGAD PAYMENT ===================== */
@@ -218,62 +242,68 @@ bot.on("callback_query", async (query) => {
     const pkgKey = data.replace("pay_nagad_", "");
     const pkg = dataImpulsePackages[pkgKey];
 
+    pendingPayments[chatId] = {
+      pkgKey,
+      method: "Nagad Merchant",
+      waitingForScreenshot: true,
+      screenshotFileId: null
+    };
+
     bot.sendMessage(
       chatId,
       `🟣 Nagad Merchant Payment\n\n` +
         `📦 Product: DataimPulse ${pkg.label}\n` +
         `💰 Amount: ${pkg.price}\n\n` +
         `📱 Nagad Merchant Number:\n+8801611237099\n\n` +
-        `Payment complete হলে নিচের button চাপুন।`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "✅ Payment Done", callback_data: `done_nagad_${pkgKey}` }],
-            [{ text: "⬅️ Back", callback_data: pkgKey }]
-          ]
-        }
-      }
+        `Payment complete হলে এখানে payment screenshot upload করুন।`
     );
   }
 
   /* ===================== PAYMENT DONE → ADMIN NOTIFICATION ===================== */
-  if (data.startsWith("done_binance_") || data.startsWith("done_nagad_")) {
-    const method = data.startsWith("done_binance_") ? "Binance" : "Nagad Merchant";
-    const pkgKey = data.replace("done_binance_", "").replace("done_nagad_", "");
+  if (data.startsWith("payment_done_")) {
+    const pkgKey = data.replace("payment_done_", "");
+    const payment = pendingPayments[chatId];
     const pkg = dataImpulsePackages[pkgKey];
+
+    if (!payment || !payment.screenshotFileId) {
+      bot.sendMessage(chatId, "⚠️ আগে payment screenshot upload করুন।");
+      return;
+    }
 
     const customerName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
     const username = user.username ? `@${user.username}` : "No username";
 
     bot.sendMessage(
       chatId,
-      `✅ Payment marked as Done!\n\n` +
+      `✅ Payment submitted successfully!\n\n` +
         `📦 Product: DataimPulse ${pkg.label}\n` +
         `💰 Amount: ${pkg.price}\n` +
-        `💳 Payment Method: ${method}\n\n` +
+        `💳 Method: ${payment.method}\n\n` +
         `Admin will verify your payment soon.`,
       {
         reply_markup: {
-          inline_keyboard: [
-            [{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]
-          ]
+          inline_keyboard: [[{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]]
         }
       }
     );
 
-    const adminMsg =
+    const adminCaption =
       `🛒 New Order Received!\n` +
       `📦 Product: DataimPulse\n` +
       `📦 Package: ${pkg.label}\n` +
       `💰 Payment Amount: ${pkg.price}\n` +
-      `💳 Payment Method: ${method}\n\n` +
+      `💳 Payment Method: ${payment.method}\n\n` +
       `👤 Customer: ${customerName}\n` +
       `🔗 Username: ${username}\n` +
       `🆔 Telegram ID: ${user.id}`;
 
     if (ADMIN_CHAT_ID) {
-      bot.sendMessage(ADMIN_CHAT_ID, adminMsg);
+      bot.sendPhoto(ADMIN_CHAT_ID, payment.screenshotFileId, {
+        caption: adminCaption
+      });
     }
+
+    delete pendingPayments[chatId];
   }
 
   /* ===================== VPN MENU ===================== */
@@ -295,7 +325,7 @@ bot.on("callback_query", async (query) => {
     });
   }
 
-  /* ===================== SUBSCRIPTION MENU ===================== */
+  /* ===================== PREMIUM SUBSCRIPTION ===================== */
   if (data === "premium_subscription") {
     bot.sendMessage(chatId, "⭐ Premium Subscription:", {
       reply_markup: {
@@ -313,12 +343,9 @@ bot.on("callback_query", async (query) => {
   bot.answerCallbackQuery(query.id).catch(() => {});
 });
 
-
-
 console.log("Bot running...");
 
-const http = require("http");
-
+/* ===================== RENDER SERVER ===================== */
 const PORT = process.env.PORT || 3000;
 
 http
