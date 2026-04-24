@@ -33,8 +33,10 @@ bot.on("photo", async (msg) => {
 
 /* ===================== BUTTON HANDLER ===================== */
 bot.on("callback_query", async (query) => {
- console.log("GLOBAL CLICK:", query.data);
+  console.log("GLOBAL CLICK:", query.data);
 
+  // button click সাথে সাথে acknowledge করবে
+  bot.answerCallbackQuery(query.id).catch(() => {});
 
   if (await handleSupport(bot, query)) return;
   if (await handleIPProxy(bot, query)) return;
@@ -43,13 +45,11 @@ bot.on("callback_query", async (query) => {
   if (await handleProxyGB(bot, query)) return;
   if (await handleSwiftProxy(bot, query)) return;
   if (await handleNiceProxy(bot, query)) return;
+
   if (await handlePaymentMethod(bot, query)) return;
   if (await handlePaymentDone(bot, query)) return;
   if (await handleVpn(bot, query)) return;
   if (await handleSubscription(bot, query)) return;
-  
-
-  bot.answerCallbackQuery(query.id).catch(() => {});
 });
 
 console.log("Bot running...");
