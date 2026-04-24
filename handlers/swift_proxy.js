@@ -14,6 +14,7 @@ const swiftPackages = {
 async function handleSwiftProxy(bot, query) {
   const chatId = query.message.chat.id;
   const data = query.data;
+    console.log("SWIFT CLICK:", data); 
 
   if (data === "swift_proxy") {
     const entries = Object.entries(swiftPackages);
