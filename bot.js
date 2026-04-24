@@ -7,6 +7,7 @@ const { handleSupport } = require("./handlers/support");
 const { handleVpn } = require("./handlers/vpn");
 const { handleSubscription } = require("./handlers/subscription");
 const { handleDataImpulse } = require("./handlers/dataimpulse");
+const { handleProxyIP } = require("./handlers/9proxy_ip");
 
 const {
   handlePaymentMethod,
