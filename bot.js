@@ -34,16 +34,18 @@ bot.on("photo", async (msg) => {
 /* ===================== BUTTON HANDLER ===================== */
 bot.on("callback_query", async (query) => {
  console.log("GLOBAL CLICK:", query.data);
-await handleSupport(bot, query);
-await handleIPProxy(bot, query);
-await handleDataImpulse(bot, query);
-await handleProxyIP(bot, query);
-await handleProxyGB(bot, query);   // 👈 এখানে আনো
-await handleSwiftProxy(bot, query);
-await handlePaymentMethod(bot, query);
-await handlePaymentDone(bot, query);
-await handleVpn(bot, query);
-await handleSubscription(bot, query);
+
+
+  if (await handleSupport(bot, query)) return;
+  if (await handleIPProxy(bot, query)) return;
+  if (await handleDataImpulse(bot, query)) return;
+  if (await handleProxyIP(bot, query)) return;
+  if (await handleProxyGB(bot, query)) return;
+  if (await handleSwiftProxy(bot, query)) return;
+  if (await handlePaymentMethod(bot, query)) return;
+  if (await handlePaymentDone(bot, query)) return;
+  if (await handleVpn(bot, query)) return;
+  if (await handleSubscription(bot, query)) return;
   
 
   bot.answerCallbackQuery(query.id).catch(() => {});
