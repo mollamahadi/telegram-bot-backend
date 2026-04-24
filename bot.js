@@ -36,24 +36,14 @@ function showMainMenu(chatId) {
   bot.sendMessage(chatId, "🚀 Welcome to Global Verified Shop\nSelect an option:", {
     reply_markup: {
       inline_keyboard: [
-        [
-          { text: "📢 Report", callback_data: "report" },
-          { text: "📚 Learn", callback_data: "learn" }
-        ],
-        [
-          { text: "📣 Join Channel", callback_data: "join_channel" },
-          { text: "☎️ HotLine", callback_data: "hotline" }
-        ],
-        [
-          { text: "🌐 IP/Proxy", callback_data: "ip_proxy" },
-          { text: "🔐 BUY VPN", callback_data: "buy_vpn" }
-        ],
-        [
-          { text: "⭐ Premium Subscription", callback_data: "premium_subscription" }
-        ],
-        [
-          { text: "🛍 Open Shop", web_app: { url: process.env.SHOP_URL } }
-        ]
+        [{ text: "🌐 IP/Proxy", callback_data: "ip_proxy" }],
+        [{ text: "🔐 BUY VPN", callback_data: "buy_vpn" }],
+        [{ text: "⭐ Premium Subscription", callback_data: "premium_subscription" }],
+        [{ text: "📣 Join Channel", callback_data: "join_channel" }],
+        [{ text: "☎️ HotLine", callback_data: "hotline" }],
+        [{ text: "📢 Report", callback_data: "report" }],
+        [{ text: "📚 Learn", callback_data: "learn" }],
+        [{ text: "🛍 Open Shop", web_app: { url: process.env.SHOP_URL } }]
       ]
     }
   });
@@ -64,17 +54,14 @@ bot.onText(/\/start/, (msg) => {
   showMainMenu(msg.chat.id);
 });
 
-/* ===================== SCREENSHOT UPLOAD HANDLER ===================== */
+/* ===================== PHOTO SCREENSHOT HANDLER ===================== */
 bot.on("photo", async (msg) => {
   const chatId = msg.chat.id;
   const payment = pendingPayments[chatId];
 
-  if (!payment || !payment.waitingForScreenshot) {
-    return;
-  }
+  if (!payment || !payment.waitingForScreenshot) return;
 
-  const photos = msg.photo;
-  const bestPhoto = photos[photos.length - 1];
+  const bestPhoto = msg.photo[msg.photo.length - 1];
 
   pendingPayments[chatId].screenshotFileId = bestPhoto.file_id;
   pendingPayments[chatId].waitingForScreenshot = false;
@@ -101,7 +88,7 @@ bot.on("callback_query", async (query) => {
   const data = query.data;
   const user = query.from;
 
-  /* ===== BACK ===== */
+  /* ===== BACK MAIN ===== */
   if (data === "back_main") {
     showMainMenu(chatId);
   }
@@ -110,7 +97,9 @@ bot.on("callback_query", async (query) => {
   if (data === "report") {
     bot.sendMessage(chatId, "📢 Please contact support.", {
       reply_markup: {
-        inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back_main" }]]
+        inline_keyboard: [
+          [{ text: "⬅️ Back", callback_data: "back_main" }]
+        ]
       }
     });
   }
@@ -119,7 +108,9 @@ bot.on("callback_query", async (query) => {
   if (data === "learn") {
     bot.sendMessage(chatId, "📚 Learning section coming soon.", {
       reply_markup: {
-        inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back_main" }]]
+        inline_keyboard: [
+          [{ text: "⬅️ Back", callback_data: "back_main" }]
+        ]
       }
     });
   }
@@ -137,7 +128,7 @@ bot.on("callback_query", async (query) => {
     });
   }
 
-  /* ===== SUPPORT ===== */
+  /* ===== HOTLINE ===== */
   if (data === "hotline") {
     bot.sendMessage(chatId, "☎️ Contact Support:", {
       reply_markup: {
@@ -166,7 +157,7 @@ bot.on("callback_query", async (query) => {
     });
   }
 
-  /* ===================== DATAIMPULSE MENU ===================== */
+  /* ===================== DATAIMPULSE PACKAGE MENU ===================== */
   if (data === "dataimpulse_menu") {
     const packageButtons = Object.entries(dataImpulsePackages).map(([key, item]) => [
       {
@@ -191,7 +182,9 @@ bot.on("callback_query", async (query) => {
     if (!pkg.available) {
       bot.sendMessage(chatId, `❌ DataimPulse ${pkg.label} Stock Out`, {
         reply_markup: {
-          inline_keyboard: [[{ text: "⬅️ Back", callback_data: "dataimpulse_menu" }]]
+          inline_keyboard: [
+            [{ text: "⬅️ Back", callback_data: "dataimpulse_menu" }]
+          ]
         }
       });
     } else {
@@ -282,7 +275,9 @@ bot.on("callback_query", async (query) => {
         `Admin will verify your payment soon.`,
       {
         reply_markup: {
-          inline_keyboard: [[{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]]
+          inline_keyboard: [
+            [{ text: "⬅️ Back to Main Menu", callback_data: "back_main" }]
+          ]
         }
       }
     );
