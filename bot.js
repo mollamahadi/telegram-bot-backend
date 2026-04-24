@@ -6,11 +6,13 @@ const { showMainMenu } = require("./handlers/menu");
 const { handleSupport } = require("./handlers/support");
 const { handleVpn } = require("./handlers/vpn");
 const { handleSubscription } = require("./handlers/subscription");
+const { handleDataImpulse } = require("./handlers/dataimpulse");
+
 const {
-  handleDataImpulse,
+  handlePaymentMethod,
   handlePaymentScreenshot,
   handlePaymentDone
-} = require("./handlers/dataimpulse");
+} = require("./handlers/payment");
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
@@ -19,7 +21,7 @@ bot.onText(/\/start/, (msg) => {
   showMainMenu(bot, msg.chat.id);
 });
 
-/* ===================== PHOTO HANDLER ===================== */
+/* ===================== SCREENSHOT / PHOTO HANDLER ===================== */
 bot.on("photo", async (msg) => {
   await handlePaymentScreenshot(bot, msg);
 });
@@ -28,6 +30,7 @@ bot.on("photo", async (msg) => {
 bot.on("callback_query", async (query) => {
   await handleSupport(bot, query);
   await handleDataImpulse(bot, query);
+  await handlePaymentMethod(bot, query);
   await handlePaymentDone(bot, query);
   await handleVpn(bot, query);
   await handleSubscription(bot, query);
