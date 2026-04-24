@@ -24,16 +24,22 @@ async function handleDataImpulse(bot, query) {
   const chatId = query.message.chat.id;
   const data = query.data;
 
- 
+
 
   /* ===================== DATAIMPULSE PACKAGE MENU ===================== */
   if (data === "dataimpulse_menu") {
-    const packageButtons = Object.entries(dataImpulsePackages).map(([key, item]) => [
-      {
-        text: item.available ? `${item.label} ✅` : `${item.label} ❌`,
-        callback_data: key
-      }
-    ]);
+    const entries = Object.entries(dataImpulsePackages);
+
+const packageButtons = [];
+
+for (let i = 0; i < entries.length; i += 2) {
+  const row = entries.slice(i, i + 2).map(([key, item]) => ({
+    text: item.available ? `${item.label} ✅` : `${item.label} ❌`,
+    callback_data: key
+  }));
+
+  packageButtons.push(row);
+}
 
     packageButtons.push([{ text: "⬅️ Back", callback_data: "ip_proxy" }]);
 
