@@ -18,12 +18,18 @@ async function handleProxyIP(bot, query) {
 
   /* ===================== MENU ===================== */
   if (data === "order_9proxy_ip") {
-    const buttons = Object.entries(proxyPackages).map(([key, item]) => [
-      {
-        text: `🟢 ${item.label} - ${item.price}`,
-        callback_data: key
-      }
-    ]);
+ const entries = Object.entries(proxyPackages);
+
+const buttons = [];
+
+for (let i = 0; i < entries.length; i += 2) {
+  const row = entries.slice(i, i + 2).map(([key, item]) => ({
+    text: `🟢 ${item.label} - ${item.price}`,
+    callback_data: key
+  }));
+
+  buttons.push(row);
+}
 
     buttons.push([{ text: "⬅️ Back", callback_data: "ip_proxy" }]);
 
